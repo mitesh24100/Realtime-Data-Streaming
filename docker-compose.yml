@@ -198,5 +198,6 @@ services:
       - CASSANDRA_PASSWORD=cassandra
     networks:
       - confluent
+
 networks:
   confluent:

@@ -42,10 +42,26 @@ def format_data(result):
 
 def stream_data():
     import json
+    from kafka import KafkaProducer
+    import time
+    import logging
     
-    result = get_data()
-    result = format_data(result)
-    print(json.dumps(result, indent=4))
+    producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+    curr_time = time.time()
+    
+    while True:
+        if time.time() > curr_time + 60: #1 minute
+            break
+        try:
+            result = get_data()
+            result = format_data(result)
+
+            # Send the formatted data to Kafka topic 'users_created'
+            producer.send('users_created', json.dumps(result).encode('utf-8'))
+        
+        except Exception as e:
+            logging.error(f"Error while processing data: {e}")
+            continue
 
 with DAG('user_automation',
          default_args=default_args,
@@ -56,5 +72,3 @@ with DAG('user_automation',
         task_id='stream_data_from_api',
         python_callable=stream_data
     )
-
-stream_data()
